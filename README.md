@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is an API designed for the Creatijob ORM system. It is intended for general use in various projects, providing an easy way to start a new project and create routes effortlessly. The API is built using PHP and follows a modular structure to organize configuration, core functionalities, and routes. It is inspired by express.js but is a much smaller project in scope.
+The Creatijob ORM API is a lightweight PHP framework designed to manage HTTP requests and route handling, making it easy to start new projects and create routes effortlessly. Inspired by express.js, this project offers a modular structure to organize configurations, core functionalities, and routes. It includes built-in support for JWT authentication, UUID generation, and random string generation.
 
 The API is located inside the `api` directory.
 
