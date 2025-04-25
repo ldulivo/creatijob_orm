@@ -2,7 +2,7 @@
 
 /**
  * File: ErrorHandler.php
- * Created at: 2023-07-10 16:00:00
+ * Created at: 2025-04-22 21:00:00
  * Author: LDulivo
  * -----
  * Description: 
@@ -20,6 +20,8 @@ namespace App\Core;
 
 class ErrorHandler
 {
+  private static string $msgResponse;
+  private static int $code;
   protected static $logger;
 
   public static function register($logger)
@@ -38,11 +40,48 @@ class ErrorHandler
 
   public static function handleException($exception)
   {
-    $message = "Exception: " . $exception->getMessage() . " in " . $exception->getFile() . " on line " . $exception->getLine();
+    $message = self::messageBuilder($exception);
     self::$logger->log($message);
 
-    http_response_code(500);
-    echo json_encode(['error' => 'Internal Server Error']);
+    http_response_code(self::$code);
+    $response = ['error' => self::$msgResponse];
+
+    if (\Config\DEBUGMODE) {
+        $response['details'] = [
+            'message' => $exception->getMessage(),
+            'file' => $exception->getFile(),
+            'line' => $exception->getLine(),
+        ];
+    }
+
+    echo json_encode($response);
     exit();
+  }
+
+  private static function messageBuilder($exception)
+  {
+    self::$code = 500;
+    self::$msgResponse = "Internal Server Error";
+
+    if ($exception instanceof \App\Core\Exceptions\RequestException) {
+      self::$code = $exception->getCode();
+      self::$msgResponse = $exception->getMessage();
+      return "Request error: " . $exception->getMessage();
+    }
+    
+    if ($exception instanceof \App\Core\Exceptions\SecurityException) {
+      self::$code = $exception->getCode();
+      self::$msgResponse = $exception->getMessage();
+      return "Connection error: " . $exception->getMessage();
+    }
+
+    if ($exception instanceof \PDOException) {
+      self::$code = 503;
+      self::$msgResponse = "Database error: " . $exception->getMessage();
+      return "Database error: " . $exception->getMessage();
+    }
+
+    return "Exception: " . $exception->getMessage() . " in " . $exception->getFile() . " on line " . $exception->getLine();
+
   }
 }

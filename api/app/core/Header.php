@@ -23,30 +23,82 @@
 namespace App\Core;
 
 use Config;
+use App\Core\Exceptions\SecurityException;
 
 class Header
 {
-  private string $_URI;
+  private string $_developmentMode;
+  private string $_origin = '';
+  private array $_allowedOrigins;
+  private bool $_isSecureOrigin;
 
   public function __construct()
   {
-    $this->_URI = self::http();
+    $this->_developmentMode = Config\DEVELOPMENT_MODE;
+    $this->_origin = self::origin();
+    $this->_allowedOrigins = $this->allowedOrigins($this->_origin);
+    $this->_isSecureOrigin = self::secureOrigin($this->_origin);
   }
 
-  private static function http()
+  private static function origin()
   {
-    Config\DEBUGMODE === true
-      ? $_http = 'http'
-      : $_http = 'https';
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+    return $_SERVER['HTTP_ORIGIN']
+      ?? ($referer ? parse_url($referer, PHP_URL_SCHEME) . '://' . parse_url($referer, PHP_URL_HOST) : '');
+  }
 
-    return $_http;
+  private static function secureOrigin($origin = '')
+  {
+    return str_starts_with($origin, 'https://');
+  }
+
+  private function allowedOrigins($origin)
+  {
+    $allowedOrigins = Config\ALLOWED_ORIGINS;
+
+    if (!$this->_developmentMode)
+      return $allowedOrigins;
+
+    if (
+      str_starts_with($this->_origin, 'http://localhost') ||
+      str_starts_with($this->_origin, 'http://127.') ||
+      str_starts_with($this->_origin, 'http://[::1]')
+    ) {
+      $allowedOrigins[] = $origin;
+    }
+
+    return $allowedOrigins;
+  }
+
+  private function setCorsHeaders()
+  {
+    if (!$this->_isSecureOrigin && !$this->_developmentMode) {
+      throw new SecurityException();
+    }
+  
+    if (in_array($this->_origin, $this->_allowedOrigins)) {
+      header("Access-Control-Allow-Origin: $this->_origin");
+  
+      if (Config\ALLOW_CREDENTIALS)
+        header('Access-Control-Allow-Credentials: true');
+    }
+  
+    header("Access-Control-Allow-Methods: " . Config\ALLOWED_METHODS);
+    header("Access-Control-Allow-Headers: " . Config\ALLOWED_HEADERS);
+    header("Content-type: application/json; charset=utf-8");
+  
+    if (Config\MAX_AGE > 0)
+      header("Access-Control-Max-Age: " . Config\MAX_AGE);
   }
 
   public function accessControl()
   {
-    header("Access-Control-Allow-Origin: $this->_URI");
-    header('Access-Control-Allow-Headers: content-type');
-    header('Access-Control-Allow-Methods: OPTIONS,GET,PUT,POST,DELETE');
-    header('Content-type: application/json; charset=utf-8');
+
+    $this->setCorsHeaders();
+
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+      http_response_code(204); // No Content
+      exit;
+    }
   }
 }

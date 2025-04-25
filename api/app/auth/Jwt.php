@@ -5,111 +5,111 @@ use Config;
 
 /**
  * File: Jwt.php
- * Created at: 2023-07-10 16:00:00
+ * Created on: 2025-04-21
  * Author: Leonardo A. D'Ulivo
- * -----
+ * 
  * Description:
- * This file defines the Jwt class, which is responsible for creating and verifying JWT tokens.
- * The class utilizes configurations defined in Config for secret key and token expiration time.
- * The tokens are encoded using the HS256 algorithm.
- * -----
- */
-
-/**
- * Class: Jwt
- * -----
- * Description:
- * The Jwt class provides functionality to generate and verify JSON Web Tokens (JWT).
- * It uses configurations for secret key and expiration time from the Config namespace.
- * -----
+ * This class handles the creation, validation, and decoding of JSON Web Tokens (JWT)
+ * using the HS256 algorithm and a secret key defined in the configuration.
+ * It does not rely on any external libraries.
  */
 class Jwt
 {
-  private string $SECRET_KEY;
-  private string $TOKEN_EXPIRATION_TIME;
-  
   /**
-   * Constructor: __construct
-   * -----
-   * Description:
-   * Initializes the Jwt class by setting the secret key and token expiration time from the Config.
-   * -----
+   * Secret key used to sign the token.
+   * 
+   * @var string
    */
-  function __construct()
+  private string $SECRET_KEY;
+
+  /**
+   * Token expiration time in seconds.
+   * 
+   * @var int
+   */
+  private int $TOKEN_EXPIRATION_TIME;
+
+  /**
+   * Constructor: Initializes the secret key and token expiration time from the Config.
+   */
+  public function __construct()
   {
     $this->SECRET_KEY = Config\SECRET_KEY;
     $this->TOKEN_EXPIRATION_TIME = Config\TOKEN_EXPIRATION_TIME;
   }
 
   /**
-   * Method: Get
-   * -----
-   * Description:
-   * Generates a JWT token for a given username.
-   * 
-   * @param string $username The username to be included in the token payload.
+   * Generates a JWT token for the given username.
+   *
+   * @param string $username The username to include in the token payload.
    * @return string The generated JWT token.
-   * -----
    */
-  public function Get($username)
+  public function Get(string $username, string $role = 'user'): string
   {
     $issuedAt = time();
-    $expirationTime = $issuedAt + $this->TOKEN_EXPIRATION_TIME; // Expiration time
+    $expirationTime = $issuedAt + $this->TOKEN_EXPIRATION_TIME;
 
     $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
     $payload = json_encode([
-        'username' => $username,
-        'iat' => $issuedAt,          // Time at which the token is created
-        'exp' => $expirationTime     // Expiration time
+      'username' => $username,
+      'role' => $role,
+      'iat' => $issuedAt,
+      'exp' => $expirationTime
     ]);
 
-    $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
-    $base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
+    $base64UrlHeader = $this->base64UrlEncode($header);
+    $base64UrlPayload = $this->base64UrlEncode($payload);
+    $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $this->SECRET_KEY, true);
+    $base64UrlSignature = $this->base64UrlEncode($signature);
 
-    $signature = hash_hmac('sha256', $base64UrlHeader . "." . $base64UrlPayload, $this->SECRET_KEY, true);
-    $base64UrlSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
-
-    return $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
+    return "$base64UrlHeader.$base64UrlPayload.$base64UrlSignature";
   }
 
   /**
-   * Method: Compare
-   * -----
-   * Description:
-   * Verifies a given JWT token to check if it is valid and matches the expected username.
-   * 
-   * @param string $token The JWT token to be verified.
-   * @param string $expectedUsername The expected username to be validated against the token payload.
-   * @return bool True if the token is valid and the username matches, False otherwise.
-   * -----
+   * Checks if a given JWT token is valid.
+   * Validity includes correct signature and non-expired payload.
+   *
+   * @param string $token The JWT token to verify.
+   * @return bool True if the token is valid, false otherwise.
    */
-  public function Compare($token, $expectedUsername)
+  public function isValid(string $token): bool
+  {
+    return $this->Decode($token) !== false;
+  }
+
+  /**
+   * Decodes a valid JWT token and returns its payload.
+   * Verifies the token's signature and expiration.
+   *
+   * @param string $token The JWT token to decode.
+   * @return array|false The decoded payload array if valid, or false if invalid or expired.
+   */
+  public function Decode(string $token): array|false
   {
     $parts = explode('.', $token);
+    if (count($parts) !== 3) return false;
 
-    if (count($parts) === 3) {
-        list($base64UrlHeader, $base64UrlPayload, $signatureProvided) = $parts;
+    [$base64UrlHeader, $base64UrlPayload, $signatureProvided] = $parts;
 
-        $payload = json_decode(base64_decode($base64UrlPayload), true);
+    $signature = hash_hmac('sha256', "$base64UrlHeader.$base64UrlPayload", $this->SECRET_KEY, true);
+    $expectedSignature = $this->base64UrlEncode($signature);
 
-        // Check if the token has expired
-        $currentTime = time();
-        if ($payload['exp'] < $currentTime) {
-            return false; // Token has expired
-        }
+    if (!hash_equals($expectedSignature, $signatureProvided)) return false;
 
-        // Verify that the token corresponds to the expected user
-        if ($payload['username'] !== $expectedUsername) {
-          return false; // User does not match
-        }
+    $payload = json_decode(base64_decode($base64UrlPayload), true);
+    if (!isset($payload['exp']) || time() > $payload['exp']) return false;
 
-        $signature = hash_hmac('sha256', $base64UrlHeader . "." . $base64UrlPayload, $this->SECRET_KEY, true);
-        $base64UrlSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+    return $payload;
+  }
 
-        return hash_equals($base64UrlSignature, $signatureProvided);
-    }
-
-    return false;
+  /**
+   * Encodes data in base64 URL-safe format (without padding).
+   *
+   * @param string $data The data to encode.
+   * @return string The base64 URL-safe encoded string.
+   */
+  private function base64UrlEncode(string $data): string
+  {
+    return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($data));
   }
 }
-?>

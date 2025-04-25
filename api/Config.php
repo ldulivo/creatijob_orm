@@ -14,6 +14,18 @@ namespace Config;
 const DEBUGMODE = true;
 
 /**
+ * DEVELOPMENT MODE
+ * -----
+ * Description:
+ * Constants related to development mode.
+ * 
+ * Constants:
+ * - DEVELOPMENT_MODE: Indicates if development mode is enabled. When set to true, development mode is enabled.
+ * -----
+ */
+const DEVELOPMENT_MODE = true;
+
+/**
  * CONFIGURATION FOR TOKENS
  * -----
  * Description:
@@ -39,7 +51,31 @@ const TOKEN_EXPIRATION_TIME = 3600;
  * -----
  */
 const DOMAIN_NAME = 'localhost';
-const DOMAIN_PORT = 8080;
+const DOMAIN_PORT = 80;
+
+/**
+ * CORS CONFIGURATION
+ * -----
+ * Description:
+ * Constants related to Cross-Origin Resource Sharing.
+ * 
+ * Constants:
+ * - ALLOWED_ORIGINS: List of allowed origins for CORS.
+ * - ALLOW_CREDENTIALS: Whether to allow credentials (cookies, auth headers).
+ * - ALLOWED_METHODS: HTTP methods allowed for CORS.
+ * - ALLOWED_HEADERS: HTTP headers allowed for CORS.
+ * - MAX_AGE: How long the results of a preflight request can be cached (in seconds).
+ * -----
+ */
+const ALLOWED_ORIGINS = [
+  'http://localhost:5500',
+  'http://localhost',
+  'https://creatijob.com',
+];
+const ALLOW_CREDENTIALS = true;
+const ALLOWED_METHODS = 'OPTIONS, GET, POST, PUT, DELETE';
+const ALLOWED_HEADERS = 'Origin, X-Requested-With, Content-Type, Accept, Authorization, xtoken, x-token';
+const MAX_AGE = 0; // 86400
 
 /**
  * DATABASE CONFIGURATION

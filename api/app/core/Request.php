@@ -19,13 +19,15 @@
 
 namespace App\Core;
 
+use App\Core\Exceptions\RequestException;
+
 class Request
 {
   public string $path;
   public array  $queryParameters;
   public string $method;
   public string $contentType;
-  public array  $body;
+  public mixed  $body;
   public array  $params;
   public string $hostname;
   public string $statusCode;
@@ -43,7 +45,7 @@ class Request
     $this->queryParameters  = $_GET;
     $this->body             = $this->getData($this->method);
     $this->params           = [];
-    $this->headers         = $this->getHeaders();
+    $this->headers          = $this->getHeaders();
   }
 
   private function getPath()
@@ -68,7 +70,7 @@ class Request
 
       case 'PUT':
       case 'DELETE':
-        $this->contentType = $_SERVER['CONTENT_TYPE'];
+        // $this->contentType = $_SERVER['CONTENT_TYPE'];
         if (strpos($this->contentType, 'application/json') !== false) {
           $data = json_decode(file_get_contents('php://input'), true);
         } else if (strpos($this->contentType, 'application/x-www-form-urlencoded') !== false) {
@@ -79,7 +81,7 @@ class Request
         break;
 
       default:
-        echo 'HTTP method not supported';
+        throw new RequestException("HTTP method '$method' is not supported.");
     }
 
     return $data;
@@ -99,5 +101,20 @@ class Request
       }
     }
     return $headers;
+  }
+
+  public function getHeader(array|string $keys): ?string
+  {
+    if (is_string($keys)) {
+      return $this->headers[$keys] ?? null;
+    }
+
+    foreach ($keys as $key) {
+      if (isset($this->headers[$key])) {
+        return $this->headers[$key];
+      }
+    }
+
+    return null;
   }
 }

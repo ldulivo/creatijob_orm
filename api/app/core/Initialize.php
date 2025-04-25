@@ -22,6 +22,7 @@ namespace App\Core;
 use App\Core\Logger;
 use Config;
 use App\Core\ErrorHandler;
+use App\Core\Context;
 
 
 class Initialize
@@ -52,5 +53,10 @@ class Initialize
      */
 
     ErrorHandler::register($errorLogger);
+
+    /**
+     * CLEAN THE CONTEXT BEFORE EACH REQUEST
+     */
+    Context::clear();
   }
 }

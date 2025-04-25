@@ -13,30 +13,34 @@
  * 1. The POST route `/api/users/create` is used to create a new user. 
  *    It checks if the user already exists in the `users.json` file, hashes the password using bcrypt, 
  *    and stores the new user in the `users.json` file.
- * 2. The POST route `/api/users` retrieves user information and validates the JWT token provided in the request header.
- *    The middleware function validates the token and checks if it matches the username provided in the request body.
+ * 2. The PUT route `/api/users/:username` is used to update an existing user. 
+ *    It checks if the user exists in the `users.json` file, hashes the new password using bcrypt, 
+ *    and updates the user in the `users.json` file.
+ * 3. The DELETE route `/api/users/:username` is used to delete an existing user. 
+ *    It checks if the user exists in the `users.json` file, and deletes the user from the `users.json` file.
  * -----
  */
 
 use App\Core\App;
-use App\Auth\Jwt;
+use App\Auth\UserJson;
+use App\Core\Context;
+use App\Middleware\AuthMiddleware;
+use App\Middleware\PassFollowingRoles;
 
 App::post('/api/users/create', function ($req, $res) {
-  $username = $req->body['username'];
-  $password = password_hash($req->body['password'], PASSWORD_BCRYPT);
-  $users = json_decode(file_get_contents(API_PATH . '/users.json'), true);
+  $dataUser['name'] = $req->body['name'];
+  $dataUser['username'] = $req->body['username'];
+  $dataUser['email'] = $req->body['email'];
+  $dataUser['role'] = $req->body['role'];
+  $dataUser['password'] = $req->body['password'];
+  $user = UserJson::AddUser($dataUser);
 
-  foreach ($users as $user) {
-    if ($user['username'] === $username) {
-      return $res::json(
-        ["message" => "User already exists"],
-        400
-      );
-    }
+  if (!$user) {
+    return $res::json(
+      ["message" => "User already exists"],
+      400
+    );
   }
-  
-  $users[] = ['username' => $username, 'password' => $password];
-  file_put_contents(API_PATH . '/users.json', json_encode($users));
 
   return $res::json(
     ["message" => "User registered successfully"],
@@ -45,26 +49,60 @@ App::post('/api/users/create', function ($req, $res) {
   
 });
 
-App::post('/api/users', function($req, $res) {
-  $username = $req->body['username'];
-  $xtoken = $req->headers['xtoken'];
+App::put('/api/users/:username', function ($req, $res) {
+  $dataUser['username'] = $req->params['username'];
+  $dataUser['name'] = $req->body['name'];
+  $dataUser['email'] = $req->body['email'];
+  $dataUser['role'] = $req->body['role'];
+  $dataUser['password'] = $req->body['password'];
 
-  $res::json([
-    'username' => $username,
-    'xtoken' => $xtoken,
-  ], 200);
+  // context returned from the middleware
+  $auth = Context::get('auth');
+
+  // if username is equal to the auth username or auth is role admin, update the user
+  if ($auth['username'] !== $dataUser['username'] && $auth['role'] !== 'admin') {
+    return $res::json(
+      ["message" => "You are not authorized to update this user"],
+      403
+    );
+  }
+
+  $user = UserJson::UpdateUser($dataUser);
+
+  if (!$user) {
+    return $res::json(
+      ["message" => "User not found"],
+      400
+    );
+  }
+
+  return $res::json(
+    ["message" => "User updated successfully", 'user' => UserJson::FindUser($dataUser['username']), 'auth' => $auth],
+    200
+  );
 }, function($req, $res) {
-  $username = $req->body['username'];
-  $xtoken = $req->headers['xtoken'];
-
-  $token = new Jwt();
-  $isValidToken = $token->Compare($xtoken, $username);
-
-  if (!$isValidToken) {
-    $res::json([
-      'message' => 'Expired Token!'
-    ], 400);
+  // return AuthMiddleware::Handle($req, $res);
+  $auth = AuthMiddleware::Handle($req, $res);
+  if (!$auth) {
     return false;
   }
+  return PassFollowingRoles::Handle($req, $res, ['admin']);
+});
+
+App::del('/api/users/:username', function ($req, $res) {
+  $username = $req->params['username'];
+  $user = UserJson::DeleteUser($username);
+
+  if (!$user) {
+    return $res::json(
+      ["message" => "User not found"],
+      400
+    );
+  }
+
+  return $res::json(
+    ["message" => "User deleted successfully"],
+    200
+  );
 });
 

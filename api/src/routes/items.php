@@ -30,7 +30,7 @@ App::post('/api/items', function ($req, $res) {
     'quantity' => $req->body['quantity'],
   ];
 
-  $res::json($data, 200);
+  $res::json($data, 201);
 });
 
 App::get('/api/items', function ($req, $res) {
@@ -95,6 +95,6 @@ App::del('/api/items/:id', function ($req, $res) {
     ],
   ];
 
-  $res::json($data, 200);
+  $res::json($data, 204);
 });
 ?>

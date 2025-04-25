@@ -19,24 +19,20 @@
 
 use App\Core\App;
 use App\Auth\Jwt;
+use App\Auth\UserJson;
 
 App::post('/api/auth/login', function ($req, $res) {
   $username = $req->body['username'];
   $password = $req->body['password'];
-  
-  $users = json_decode(file_get_contents(API_PATH . '/users.json'), true);
 
-  foreach ($users as $user) {
-    if ($user['username'] === $username && password_verify($password, $user['password'])) {
-      $token = new Jwt();
-    }
-  }
+  if (UserJson::VerifyCredentials($username, $password)) {
+    $token = new Jwt();
+  }  
 
   isset($token)
   ? $res::json([
       'username' => $username,
-      'password' => $password,
-      'token' => $token->Get($username)
+      'token' => $token->Get($username, UserJson::GetRole($username))
     ], 200)
   : $res::json([
     'message' => 'This username or password does not exist!'

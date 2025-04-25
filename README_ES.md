@@ -45,7 +45,7 @@ Este archivo contiene varias constantes de configuración:
   - `SECRET_KEY`: La clave secreta utilizada para generar y validar tokens.
   - `TOKEN_EXPIRATION_TIME`: El tiempo de vida de un token en segundos (por defecto: 3600 segundos o 1 hora).
 
-- **Configuración del Dominio**
+- **Configuración del Dominio** (cambiar esto por cors)
   - `DOMAIN_NAME`: El nombre del dominio del servidor.
   - `DOMAIN_PORT`: El puerto en el que se está ejecutando el servidor.
 
