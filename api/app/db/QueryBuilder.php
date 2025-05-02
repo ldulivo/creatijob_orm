@@ -2,7 +2,6 @@
 namespace App\Db;
 
 use PDOException;
-use App\Core\Logger;
 use App\Db\Database;
 use App\Db\DatabaseUtils;
 use App\Db\Heart\Where;
@@ -36,12 +35,6 @@ class QueryBuilder extends Where {
     private $limit = '';
     private $offset = '';
     private $set = '';
-    private static $logger;
-
-    public function __construct()
-    {
-        self::$logger = new Logger(API_PATH . '/log/error.log'); // Initialize the logger
-    }
 
     /**
      * Method: table

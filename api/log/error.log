@@ -1,2 +1,0 @@
-[ 2025-05-02 11:00:38 ] - Error [2]: Undefined array key "price" in /home/ldulivo/Documentos/proyectos/2025/creatijob_orm/api/src/routes/db_items.php on line 85
-[ 2025-05-02 11:00:38 ] - Exception: Undefined array key "price" in /home/ldulivo/Documentos/proyectos/2025/creatijob_orm/api/src/routes/db_items.php on line 85

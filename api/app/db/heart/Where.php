@@ -36,6 +36,10 @@ abstract class Where
     {
         $operator = $this->operators[$operatorKey] ?? '=';
 
+        if (empty($this->where)) {
+            $boolean = '';
+        }
+
         if (in_array($operatorKey, ['in', 'notIn'])) {
             $placeholders = '(' . implode(',', array_fill(0, count($value), '?')) . ')';
             $this->where[] = "$boolean $column $operator $placeholders";
@@ -60,9 +64,8 @@ abstract class Where
         if (empty($this->where)) {
             return '';
         }
-
-        $first = ltrim(array_shift($this->where), 'AND ');
-        return 'WHERE ' . $first . ' ' . implode(' ', $this->where);
+        
+        return 'WHERE ' . implode(' ', $this->where);
     }
 }
 ?>
