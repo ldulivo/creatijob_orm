@@ -5,6 +5,7 @@ use PDOException;
 use App\Core\Logger;
 use App\Db\Database;
 use App\Db\DatabaseUtils;
+use App\Db\Heart\Where;
 
 /**
  * Class QueryBuilder
@@ -28,14 +29,12 @@ use App\Db\DatabaseUtils;
  * 
  * -----
  */
-class QueryBuilder {
+class QueryBuilder extends Where {
     private $table;
     private $columns = '*';
-    private $where = '';
     private $orderBy = '';
     private $limit = '';
     private $offset = '';
-    private $params = [];
     private $set = '';
     private static $logger;
 
@@ -86,9 +85,15 @@ class QueryBuilder {
      * @return $this The current instance of the QueryBuilder.
      * -----
      */
-    public function where($column, $operator, $value) {
-        $this->where = "WHERE $column $operator ?";
-        $this->params[] = $value;
+    public function where($column, $operatorKey, $value)
+    {
+        $this->addWhere($column, $operatorKey, $value);
+        return $this;
+    }
+
+    public function orWhere($column, $operatorKey, $value)
+    {
+        $this->addWhere($column, $operatorKey, $value, 'OR');
         return $this;
     }
 
@@ -148,8 +153,9 @@ class QueryBuilder {
      * @return array The results of the query.
      * -----
      */
-    public function get() {
-        $sql = "SELECT $this->columns FROM $this->table $this->where $this->orderBy $this->limit $this->offset";
+    public function get()
+    {
+        $sql = "SELECT $this->columns FROM $this->table " . $this->buildWhere() . " $this->orderBy $this->limit $this->offset";
         try {
             return Database::fetchAll($sql, $this->params);
         } catch (PDOException $e) {
@@ -173,7 +179,7 @@ class QueryBuilder {
      */
     public function count() {
         try {
-            $sql = "SELECT COUNT(*) FROM $this->table $this->where";
+            $sql = "SELECT COUNT(*) FROM $this->table " . $this->buildWhere();
             $result = Database::fetch($sql, $this->params);
             return $result['COUNT(*)'];
         } catch (PDOException $e) {
@@ -223,7 +229,8 @@ class QueryBuilder {
      * -----
      */
     public function update($data) {
-        $recordExists = DatabaseUtils::recordExists($this->table, $this->where, $this->params);
+        $whereClause = $this->buildWhere();
+        $recordExists = DatabaseUtils::recordExists($this->table, $whereClause, $this->params);
 
         if (!$recordExists) {
             return false;
@@ -235,7 +242,7 @@ class QueryBuilder {
         }
         $set = rtrim($set, ', ');
 
-        $sql = "UPDATE $this->table SET $set $this->where";
+        $sql = "UPDATE $this->table SET $set $whereClause";
         try {
             $affectedRows = Database::execute($sql, array_merge(array_values($data), $this->params));
             return $affectedRows === 0 ? null : $affectedRows;
@@ -259,13 +266,14 @@ class QueryBuilder {
      * -----
      */
     public function delete() {
-        $recordExists = DatabaseUtils::recordExists($this->table, $this->where, $this->params);
+        $whereClause = $this->buildWhere();
+        $recordExists = DatabaseUtils::recordExists($this->table, $whereClause, $this->params);
 
         if (!$recordExists) {
             return false;
         }
 
-        $sql = "DELETE FROM $this->table $this->where";
+        $sql = "DELETE FROM $this->table $whereClause";
         try {
             return Database::execute($sql, $this->params);
         } catch (PDOException $e) {
