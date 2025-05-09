@@ -18,6 +18,8 @@
 
 namespace App\Core;
 
+use Config;
+
 class ErrorHandler
 {
   private static string $msgResponse;
@@ -76,8 +78,20 @@ class ErrorHandler
     }
 
     if ($exception instanceof \PDOException) {
+      $rawMessage = $exception->getMessage();
+      
+      if (Config\DEBUGMODE === false) {
+        $keywords = ['user', 'password', 'host', 'access denied', 'SQLSTATE'];
+        foreach ($keywords as $keyword) {
+            if (stripos($rawMessage, $keyword) !== false) {
+                $rawMessage = "Sensitive database error";
+                break;
+            }
+        }
+      }
+
       self::$code = 503;
-      self::$msgResponse = "Database error: " . $exception->getMessage();
+      self::$msgResponse = "Database error: " . $rawMessage;
       return "Database error: " . $exception->getMessage();
     }
 

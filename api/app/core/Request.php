@@ -37,11 +37,11 @@ class Request
   function __construct()
   {
     $this->path             = trim(rtrim($this->getPath(), '/'));
-    $this->method           = $_SERVER['REQUEST_METHOD'];
+    $this->method           = $_SERVER['REQUEST_METHOD'] ?? 'GET'; 
     $this->contentType      = $_SERVER['CONTENT_TYPE'] ?? '';
-    $this->hostname         = $_SERVER['SERVER_NAME'];
-    $this->statusCode       = $_SERVER['REDIRECT_STATUS'];
-    $this->time             = $_SERVER['REQUEST_TIME'];
+    $this->hostname         = $_SERVER['SERVER_NAME'] ?? '';
+    $this->statusCode       = $_SERVER['REDIRECT_STATUS'] ?? 200;
+    $this->time             = $_SERVER['REQUEST_TIME'] ?? time();
     $this->queryParameters  = $_GET;
     $this->body             = $this->getData($this->method);
     $this->params           = [];

@@ -84,16 +84,31 @@ const MAX_AGE = 0; // 86400
  * Constants for the database configuration.
  * 
  * Constants:
- * - DB_HOST: The hostname for the database server.
- * - DB_USERNAME: The username to connect to the database.
- * - DB_PASSWORD: The password to connect to the database.
- * - DB_NAME: The name of the database to connect to.
- * - DB_CHARSET: The character set used by the database.
+ * - DB_DRIVER: The database engine in use ('mysql' or 'sqlsrv').
+ * 
+ * MySQL-specific Constants:
+ * - MYSQL_HOST, MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_DBNAME, MYSQL_CHARSET
+ * 
+ * SQL Server-specific Constants:
+ * - SQLSRV_HOST, SQLSRV_USERNAME, SQLSRV_PASSWORD, SQLSRV_DBNAME
  * -----
  */
-const DB_HOST = '127.0.0.1';
-const DB_USERNAME = 'root';
-const DB_PASSWORD = '123ASD';
-const DB_NAME = 'test';
-const DB_CHARSET = 'utf8mb4';
+
+// Choose the current DB driver: 'mysql' or 'sqlsrv' or 'pgsql'
+const DB_DRIVER = 'mysql';
+
+// MySQL configuration
+const MYSQL_HOST     = '127.0.0.1';               // MySQL server host address
+const MYSQL_USERNAME = 'root';                    // Database username
+const MYSQL_PASSWORD = 'yourPassword';            // Database user password
+const MYSQL_DBNAME   = 'testdb';                  // Name of the database
+const MYSQL_CHARSET  = 'utf8mb4';                 // Charset used for the connection (recommended: utf8mb4)
+const MYSQL_PORT     = '3306';                    // MySQL port (default: 3306)
+
+// SQL Server configuration
+const SQLSRV_HOST     = '127.0.0.1';               // SQL Server host address
+const SQLSRV_USERNAME = 'sa';                      // Database username
+const SQLSRV_PASSWORD = 'yourStrong(!)Password';   // Database user password
+const SQLSRV_DBNAME   = 'testDB';                  // Name of the database
+const SQLSRV_PORT     = '1433';                    // SQL Server port (default: 1433)
 ?>

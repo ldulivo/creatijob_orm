@@ -76,11 +76,11 @@ class App
      * Defines a GET route with a handler and an optional middleware.
      * 
      * @param string $route The route to handle
-     * @param callable $handler The function to handle the request
-     * @param callable|null $middleware Optional middleware to execute before the handler
+     * @param $handler The function to handle the request
+     * @param $middleware Optional middleware to execute before the handler
      * -----
      */
-    public static function get($route, callable $handler, callable $middleware = null)
+    public static function get($route, $handler, $middleware = null)
     {
         self::$routes['GET'][$route] = ['handler' => $handler, 'middleware' => $middleware];
     }
@@ -92,11 +92,11 @@ class App
      * Defines a POST route with a handler and an optional middleware.
      * 
      * @param string $route The route to handle
-     * @param callable $handler The function to handle the request
-     * @param callable|null $middleware Optional middleware to execute before the handler
+     * @param $handler The function to handle the request
+     * @param $middleware Optional middleware to execute before the handler
      * -----
      */
-    public static function post($route, callable $handler, callable $middleware = null)
+    public static function post($route, $handler, $middleware = null)
     {
         self::$routes['POST'][$route] = ['handler' => $handler, 'middleware' => $middleware];
     }
@@ -108,11 +108,11 @@ class App
      * Defines a PUT route with a handler and an optional middleware.
      * 
      * @param string $route The route to handle
-     * @param callable $handler The function to handle the request
-     * @param callable|null $middleware Optional middleware to execute before the handler
+     * @param $handler The function to handle the request
+     * @param $middleware Optional middleware to execute before the handler
      * -----
      */
-    public static function put($route, callable $handler, callable $middleware = null)
+    public static function put($route, $handler, $middleware = null)
     {
         self::$routes['PUT'][$route] = ['handler' => $handler, 'middleware' => $middleware];
     }
@@ -124,11 +124,11 @@ class App
      * Defines a DELETE route with a handler and an optional middleware.
      * 
      * @param string $route The route to handle
-     * @param callable $handler The function to handle the request
-     * @param callable|null $middleware Optional middleware to execute before the handler
+     * @param $handler The function to handle the request
+     * @param $middleware Optional middleware to execute before the handler
      * -----
      */
-    public static function del($route, callable $handler, callable $middleware = null)
+    public static function del($route, $handler, $middleware = null)
     {
         self::$routes['DELETE'][$route] = ['handler' => $handler, 'middleware' => $middleware];
     }
@@ -162,9 +162,8 @@ class App
                             return;
                         }
                     }
-
-                    // Execute the route handler
-                    call_user_func($routeConfig['handler'], self::$req, self::$res);
+                    
+                    self::callHandler($routeConfig['handler']);
                     return;
                 }
             }
@@ -172,5 +171,33 @@ class App
 
         // If no route is found, return 404
         self::$res::jsonNotFound();
+    }
+
+    private static function callHandler($handler)
+    {
+        if (is_callable($handler)) {
+            return call_user_func($handler, self::$req, self::$res);
+        }
+
+        // Array tipo [Clase::class, 'metodo']
+        if (is_array($handler) && count($handler) === 2) {
+            [$class, $method] = $handler;
+            if (class_exists($class) && method_exists($class, $method)) {
+                $controller = new $class();
+                return $controller->$method(self::$req, self::$res);
+            }
+        }
+
+        // String tipo "ItemController@get"
+        if (is_string($handler) && strpos($handler, '@') !== false) {
+            [$className, $method] = explode('@', $handler);
+            $fqcn = 'App\\Controllers\\' . $className;
+            if (class_exists($fqcn) && method_exists($fqcn, $method)) {
+                $controller = new $fqcn();
+                return $controller->$method(self::$req, self::$res);
+            }
+        }
+
+        throw new \Exception("Handler no válido");
     }
 }
