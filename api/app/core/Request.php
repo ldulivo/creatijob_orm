@@ -70,7 +70,6 @@ class Request
 
       case 'PUT':
       case 'DELETE':
-        // $this->contentType = $_SERVER['CONTENT_TYPE'];
         if (strpos($this->contentType, 'application/json') !== false) {
           $data = json_decode(file_get_contents('php://input'), true);
         } else if (strpos($this->contentType, 'application/x-www-form-urlencoded') !== false) {
