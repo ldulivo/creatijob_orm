@@ -21,6 +21,13 @@ AVAILABLE COMMANDS:
   rollback
     Rolls back the last executed migration.
 
+  make:resource ClassName
+    Creates a basic RESTful resource with:
+      - Model: src/models/ClassNameModel.php
+      - Controller: src/controllers/ClassNameController.php
+      - Route file: src/routes/class_name.php
+      Includes methods: get, getById, create, update, delete
+
   help
     Displays this help message.
 
@@ -36,6 +43,7 @@ EXAMPLES:
   php api/creatijob.php make:migration AddEmailToUsersTable
   php api/creatijob.php migrate
   php api/creatijob.php rollback
+  php api/creatijob.php make:resource Users
 
 For more information, visit: https://creatijob.com
 

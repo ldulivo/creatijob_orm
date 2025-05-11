@@ -45,11 +45,18 @@ switch (_CMD) {
         require ROOT_PATH . '/commands/migrate.php';
         break;
 
+    case 'make:resource':
+        require ROOT_PATH . '/commands/resource.php';
+        generate_resource();
+        break;
+
     case 'help':
         require ROOT_PATH . '/commands/help.php';
         break;
 
     default:
-        echo "Comando desconocido: " . _CMD . "\n";
+        echo "Unknown command: " . _CMD . "\n";
+        echo "Available commands: make:migration, migrate, rollback, make:resource, help\n";
+        echo "Use 'help' for more information.\n";
         exit(1);
 }
