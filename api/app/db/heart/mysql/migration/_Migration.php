@@ -37,6 +37,27 @@ class _Migration
     }
 
     /**
+     * Modifica una tabla ejecutando la estructura definida en el callback
+     */
+    public function alter(string $tableName, callable $callback): void
+    {
+        $structure = new _TableStructure($tableName);
+        $structure->markAsAlter(); // nuevo método
+        $callback($structure);
+
+        $sql = "ALTER TABLE `$tableName` " . $structure->getSql();
+        $this->pdo->exec($sql);
+    }
+
+    /**
+     * Elimina una columna de una tabla
+     */
+    public function dropColumn(string $table, string $column): void
+    {
+        $this->pdo->exec("ALTER TABLE `$table` DROP COLUMN `$column`");
+    }
+
+    /**
      * Registra una migración como ejecutada
      */
     public function recordMigration(string $migrationFile): void

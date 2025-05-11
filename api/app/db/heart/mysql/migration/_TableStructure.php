@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Db\Heart\Mysql\Migration;
 
 class _TableStructure
@@ -6,6 +7,7 @@ class _TableStructure
     private string $tableName;
     private array $columns = [];
     private array $constraints = [];
+    private bool $alterMode = false;
 
     public function __construct(string $tableName)
     {
@@ -17,9 +19,11 @@ class _TableStructure
         $this->columns[] = "`$name` INT AUTO_INCREMENT PRIMARY KEY";
     }
 
-    public function string(string $name, int $length = 255): void
+    public function string(string $name, int $length = 255): _ColumnDefinition
     {
-        $this->columns[] = "`$name` VARCHAR($length)";
+        $col = new _ColumnDefinition($name, "VARCHAR($length)");
+        $this->columns[$name] = $col;
+        return $col;
     }
 
     public function text(string $name): void
@@ -27,19 +31,25 @@ class _TableStructure
         $this->columns[] = "`$name` TEXT";
     }
 
-    public function integer(string $name): void
+    public function integer(string $name): _ColumnDefinition
     {
-        $this->columns[] = "`$name` INT";
+        $col = new _ColumnDefinition($name, "INT");
+        $this->columns[$name] = $col;
+        return $col;
     }
 
-    public function boolean(string $name): void
+    public function boolean(string $name): _ColumnDefinition
     {
-        $this->columns[] = "`$name` TINYINT(1)";
+        $col = new _ColumnDefinition($name, "TINYINT(1)");
+        $this->columns[$name] = $col;
+        return $col;
     }
 
-    public function float(string $name, int $total = 8, int $decimals = 2): void
+    public function float(string $name, int $total = 8, int $decimals = 2): _ColumnDefinition
     {
-        $this->columns[] = "`$name` FLOAT($total, $decimals)";
+        $col = new _ColumnDefinition($name, "FLOAT($total, $decimals)");
+        $this->columns[$name] = $col;
+        return $col;
     }
 
     public function enum(string $name, array $values): void
@@ -103,7 +113,10 @@ class _TableStructure
 
     public function getSql(): string
     {
-        return implode(", ", array_merge($this->columns, $this->constraints));
+        $cols = array_map(fn($col) => $col instanceof _ColumnDefinition ? $col->get() : $col, $this->columns);
+        return $this->alterMode
+            ? implode(', ', array_map(fn($c) => "ADD COLUMN $c", $cols))
+            : implode(', ', array_merge($cols, $this->constraints));
     }
 
     public function getTable(): string
@@ -132,4 +145,8 @@ class _TableStructure
         $this->constraints[] = "INDEX `$name` (`$cols`)";
     }
 
+    public function markAsAlter(): void
+    {
+        $this->alterMode = true;
+    }
 }

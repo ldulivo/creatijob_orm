@@ -45,12 +45,14 @@ class $className extends Migration
 {
     public function up()
     {
-        \$this->raw("ALTER TABLE `$tableName` ADD COLUMN `$columnName` VARCHAR(255)");
+        \$this->alter('$tableName', function (\$table) {
+            \$table->string('$columnName')->nullable();
+        });
     }
 
     public function down()
     {
-        \$this->raw("ALTER TABLE `$tableName` DROP COLUMN `$columnName`");
+        \$this->dropColumn('$tableName', '$columnName');
     }
 }
 PHP;

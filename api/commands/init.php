@@ -45,6 +45,10 @@ switch (_CMD) {
         require ROOT_PATH . '/commands/migrate.php';
         break;
 
+    case 'help':
+        require ROOT_PATH . '/commands/help.php';
+        break;
+
     default:
         echo "Comando desconocido: " . _CMD . "\n";
         exit(1);

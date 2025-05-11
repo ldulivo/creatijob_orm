@@ -31,6 +31,14 @@ abstract class Migration
         $this->migration->drop($tableName);
     }
 
+    protected function alter(string $tableName, callable $callback): void {
+        $this->migration->alter($tableName, $callback);
+    }
+
+    protected function dropColumn(string $table, string $column): void {
+        $this->migration->dropColumn($table, $column);
+    }
+
     protected function recordMigration(string $migrationFile): void {
         $this->migration->recordMigration($migrationFile);
     }
