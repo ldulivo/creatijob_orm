@@ -23,7 +23,7 @@ function generate_migration(): void
 
     // Detectar si es del tipo AddXXXToYYYTable
     $isAlter = false;
-    $tableName = strtolower($className);
+    $tableName = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $className));
     $columnName = 'column_name';
 
     if (preg_match('/^Add([A-Za-z0-9]+)To([A-Za-z0-9]+)Table$/', $className, $match)) {
