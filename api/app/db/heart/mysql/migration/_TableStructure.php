@@ -26,9 +26,11 @@ class _TableStructure
         return $col;
     }
 
-    public function text(string $name): void
+    public function text(string $name): _ColumnDefinition
     {
-        $this->columns[] = "`$name` TEXT";
+        $col = new _ColumnDefinition($name, "TEXT");
+        $this->columns[$name] = $col;
+        return $col;
     }
 
     public function integer(string $name): _ColumnDefinition
