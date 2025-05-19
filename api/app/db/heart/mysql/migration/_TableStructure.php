@@ -94,10 +94,16 @@ class _TableStructure
         $this->constraints[] = "INDEX `$index` (`$columnName`)";
     }
 
-    public function unique(string $columnName, ?string $uniqueName = null): void
+    public function unique(string|array $columns, ?string $name = null): void
     {
-        $unique = $uniqueName ?? "{$columnName}_unique";
-        $this->constraints[] = "UNIQUE `$unique` (`$columnName`)";
+        if (is_array($columns)) {
+            $name = $name ?? 'unique_' . implode('_', $columns);
+            $cols = implode('`, `', $columns);
+            $this->constraints[] = "UNIQUE `$name` (`$cols`)";
+        } else {
+            $name = $name ?? "{$columns}_unique";
+            $this->constraints[] = "UNIQUE `$name` (`$columns`)";
+        }
     }
 
     public function foreign(
