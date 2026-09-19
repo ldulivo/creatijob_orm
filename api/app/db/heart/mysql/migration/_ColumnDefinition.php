@@ -34,7 +34,7 @@ class _ColumnDefinition
     {
         $this->default = is_string($value)
             ? "'" . addslashes($value) . "'"
-            : (is_null($value) ? "NULL" : $value);
+            : (is_null($value) ? "NULL" : (is_bool($value) ? ($value ? '1' : '0') : $value));
         return $this;
     }
 

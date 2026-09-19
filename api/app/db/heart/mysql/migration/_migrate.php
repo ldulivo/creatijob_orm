@@ -10,8 +10,10 @@ $migrationsPath = ROOT_PATH . '/migrations/';
 $files = glob($migrationsPath . '*.php');
 $action = $_SERVER['CJ_ACTION'] ?? 'migrate';
 
+$port = defined('Config\\MYSQL_PORT') ? Config\MYSQL_PORT : 3306;
+$charset = defined('Config\\MYSQL_CHARSET') ? Config\MYSQL_CHARSET : 'utf8mb4';
 $pdo = new PDO(
-    'mysql:host=' . Config\MYSQL_HOST . ';dbname=' . Config\MYSQL_DBNAME,
+    "mysql:host=" . Config\MYSQL_HOST . ";port={$port};dbname=" . Config\MYSQL_DBNAME . ";charset={$charset}",
     Config\MYSQL_USERNAME,
     Config\MYSQL_PASSWORD
 );
