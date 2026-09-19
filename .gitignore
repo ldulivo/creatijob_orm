@@ -1,0 +1,14 @@
+# Environment configuration (secrets)
+api/env.php
+env.php
+.env
+
+# Logs
+api/log/*.log
+log/*.log
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+

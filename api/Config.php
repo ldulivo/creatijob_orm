@@ -1,6 +1,18 @@
 <?php
 namespace Config;
 
+// Load environment variables and keys from env.php
+$envFilePath = __DIR__ . '/env.php';
+if (!file_exists($envFilePath) && file_exists(dirname(__DIR__) . '/env.php')) {
+  $envFilePath = dirname(__DIR__) . '/env.php';
+}
+
+if (!file_exists($envFilePath)) {
+  exit("Error: 'env.php' file not found. Please create it based on 'env.example.php'.");
+}
+
+require_once $envFilePath;
+
 /**
  * DEBUG MODE
  * -----
@@ -36,7 +48,7 @@ const DEVELOPMENT_MODE = true;
  * - TOKEN_EXPIRATION_TIME: The lifetime of a token in seconds. The default is 3600 seconds (1 hour).
  * -----
  */
-const SECRET_KEY = 'S<}2<Pz!8c@[5IC&4H@NJcCKAbanJtRGpO(KuY71M}SjM]uNgsu^XM$_}#l1e94A';
+const SECRET_KEY = \SECRET_KEY;
 const TOKEN_EXPIRATION_TIME = 3600;
 
 /**
@@ -98,17 +110,17 @@ const MAX_AGE = 0; // 86400
 const DB_DRIVER = 'mysql';
 
 // MySQL configuration
-const MYSQL_HOST     = '127.0.0.1';               // MySQL server host address
-const MYSQL_USERNAME = 'root';                    // Database username
-const MYSQL_PASSWORD = 'yourPassword';            // Database user password
-const MYSQL_DBNAME   = 'testdb';                  // Name of the database
-const MYSQL_CHARSET  = 'utf8mb4';                 // Charset used for the connection (recommended: utf8mb4)
-const MYSQL_PORT     = '3306';                    // MySQL port (default: 3306)
+const MYSQL_HOST     = \MYSQL_HOST;     // MySQL server host address
+const MYSQL_USERNAME = \MYSQL_USERNAME; // Database username
+const MYSQL_PASSWORD = \MYSQL_PASSWORD; // Database user password
+const MYSQL_DBNAME   = \MYSQL_DBNAME;   // Name of the database
+const MYSQL_CHARSET  = \MYSQL_CHARSET;  // Charset used for the connection (recommended: utf8mb4)
+const MYSQL_PORT     = \MYSQL_PORT;     // MySQL port (default: 3306)
 
 // SQL Server configuration
-const SQLSRV_HOST     = '127.0.0.1';               // SQL Server host address
-const SQLSRV_USERNAME = 'sa';                      // Database username
-const SQLSRV_PASSWORD = 'yourStrong(!)Password';   // Database user password
-const SQLSRV_DBNAME   = 'testDB';                  // Name of the database
-const SQLSRV_PORT     = '1433';                    // SQL Server port (default: 1433)
+const SQLSRV_HOST     = \SQLSRV_HOST;     // SQL Server host address
+const SQLSRV_USERNAME = \SQLSRV_USERNAME; // Database username
+const SQLSRV_PASSWORD = \SQLSRV_PASSWORD; // Database user password
+const SQLSRV_DBNAME   = \SQLSRV_DBNAME;   // Name of the database
+const SQLSRV_PORT     = \SQLSRV_PORT;     // SQL Server port (default: 1433)
 ?>
