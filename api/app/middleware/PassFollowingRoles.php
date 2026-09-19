@@ -39,8 +39,8 @@ class PassFollowingRoles
 
     if (!$payload) {
       $res::json([
-        'message' => 'Expired Token!'
-      ], 400);
+        'message' => 'Expired or invalid token.'
+      ], 401);
       return false;
     }
 
