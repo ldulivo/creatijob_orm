@@ -16,7 +16,7 @@ class _TableStructure
 
     public function id(string $name = 'id'): void
     {
-        $this->columns[] = "`$name` INT AUTO_INCREMENT PRIMARY KEY";
+        $this->columns[$name] = "`$name` INT AUTO_INCREMENT PRIMARY KEY";
     }
 
     public function string(string $name, int $length = 255): _ColumnDefinition
@@ -54,26 +54,33 @@ class _TableStructure
         return $col;
     }
 
+    public function decimal(string $name, int $precision = 10, int $scale = 2): _ColumnDefinition
+    {
+        $col = new _ColumnDefinition($name, "DECIMAL($precision, $scale)");
+        $this->columns[$name] = $col;
+        return $col;
+    }
+
     public function enum(string $name, array $values): void
     {
         $escaped = array_map(fn($v) => "'$v'", $values);
-        $this->columns[] = "`$name` ENUM(" . implode(', ', $escaped) . ")";
+        $this->columns[$name] = "`$name` ENUM(" . implode(', ', $escaped) . ")";
     }
 
     public function date(string $name): void
     {
-        $this->columns[] = "`$name` DATE";
+        $this->columns[$name] = "`$name` DATE";
     }
 
     public function datetime(string $name): void
     {
-        $this->columns[] = "`$name` DATETIME";
+        $this->columns[$name] = "`$name` DATETIME";
     }
 
     public function timestamps(): void
     {
-        $this->columns[] = "`created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP";
-        $this->columns[] = "`updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
+        $this->columns['created_at'] = "`created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP";
+        $this->columns['updated_at'] = "`updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP";
     }
 
     public function nullable(string $name, string $type = 'VARCHAR', int $length = 255): void
@@ -85,7 +92,7 @@ class _TableStructure
             'FLOAT'   => "`$name` FLOAT($length) NULL",
             default   => "`$name` $type NULL",
         };
-        $this->columns[] = $definition;
+        $this->columns[$name] = $definition;
     }
 
     public function index(string $columnName, ?string $indexName = null): void
@@ -119,11 +126,24 @@ class _TableStructure
             "CONSTRAINT `$fk` FOREIGN KEY (`$columnName`) REFERENCES `$foreignTable`(`$foreignColumn`) ON DELETE $onDelete ON UPDATE $onUpdate";
     }
 
+    public function getColumns(): array
+    {
+        return $this->columns;
+    }
+
+    public function getConstraints(): array
+    {
+        return $this->constraints;
+    }
+
     public function getSql(): string
     {
-        $cols = array_map(fn($col) => $col instanceof _ColumnDefinition ? $col->get() : $col, $this->columns);
+        $cols = array_map(fn($col) => $col instanceof _ColumnDefinition ? $col->get() : $col, array_values($this->columns));
         return $this->alterMode
-            ? implode(', ', array_map(fn($c) => "ADD COLUMN $c", $cols))
+            ? implode(', ', array_merge(
+                array_map(fn($c) => "ADD COLUMN $c", $cols),
+                array_map(fn($c) => "ADD $c", $this->constraints)
+            ))
             : implode(', ', array_merge($cols, $this->constraints));
     }
 
